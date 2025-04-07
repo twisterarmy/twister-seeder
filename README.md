@@ -21,7 +21,7 @@ USAGE
 -----
 
 > [!NOTE]
-> See also the [Wiki documentation](https://github.com/twisterarmy/twister-seeder/wiki)
+> Visit the [Wiki](https://github.com/twisterarmy/twister-seeder/wiki) for more details!
 
 Using of it is [highly appreciated](http://twister.net.co/?p=410). If you
 have a 24×7 machine and you are able to add an special NS record to your domain,
