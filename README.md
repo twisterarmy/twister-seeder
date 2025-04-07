@@ -1,7 +1,7 @@
 Twister-seeder
 ==============
 
-Twister-seeder is a crawler for the [Twister](http://twister.net.co) 
+Twister-seeder is a crawler for the [Twister](http://twister.net.co)
 ([github](https://github.com/miguelfreitas/twister-core)) network,
 which exposes a list of reliable nodes via a built-in DNS server.
 
@@ -19,6 +19,9 @@ Features:
 
 USAGE
 -----
+
+> [!NOTE]
+> See also the [Wiki documentation](https://github.com/twisterarmy/twister-seeder/wiki)
 
 Using of it is [highly appreciated](http://twister.net.co/?p=410). If you
 have a 24×7 machine and you are able to add an special NS record to your domain,
