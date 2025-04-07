@@ -1,2 +1,5 @@
+*.dat
+*.dump
+*.log
 *.o
-dnsseed
+dnsseed*
