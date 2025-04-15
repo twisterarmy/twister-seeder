@@ -23,31 +23,33 @@ public:
   int fUseTestNet;
   int fWipeBan;
   int fWipeIgnore;
+  int nStatsRenew;
   int fNoStats;
   const char *mbox;
   const char *ns;
   const char *host;
   const char *tor;
 
-  CDnsSeedOpts() : nThreads(96), nDnsThreads(4), nPort(53), mbox(NULL), ns(NULL), host(NULL), tor(NULL), fUseTestNet(false), fWipeBan(false), fWipeIgnore(false), fNoStats(false) {}
+  CDnsSeedOpts() : nThreads(96), nDnsThreads(4), nPort(53), mbox(NULL), ns(NULL), host(NULL), tor(NULL), nStatsRenew(1), fUseTestNet(false), fWipeBan(false), fWipeIgnore(false), fNoStats(false) {}
 
   void ParseCommandLine(int argc, char **argv) {
     static const char *help = "Twister-seeder\n"
                               "Usage: %s -h <host> -n <ns> [-m <mbox>] [-t <threads>] [-p <port>]\n"
                               "\n"
                               "Options:\n"
-                              "-h <host>       Hostname of the DNS seed\n"
-                              "-n <ns>         Hostname of the nameserver\n"
-                              "-m <mbox>       E-Mail address reported in SOA records\n"
-                              "-t <threads>    Number of crawlers to run in parallel (default 96)\n"
-                              "-d <threads>    Number of DNS server threads (default 4)\n"
-                              "-p <port>       UDP port to listen on (default 53)\n"
-                              "-o <ip:port>    Tor proxy IP/Port\n"
-                              "--testnet       Use testnet\n"
-                              "--wipeban       Wipe list of banned nodes\n"
-                              "--wipeignore    Wipe list of ignored nodes\n"
-                              "--no-stats      Disable the ThreadStats feature\n"
-                              "-?, --help      Show this text\n"
+                              "-h <host>               Hostname of the DNS seed\n"
+                              "-n <ns>                 Hostname of the nameserver\n"
+                              "-m <mbox>               E-Mail address reported in SOA records\n"
+                              "-t <threads>            Number of crawlers to run in parallel (default 96)\n"
+                              "-d <threads>            Number of DNS server threads (default 4)\n"
+                              "-p <port>               UDP port to listen on (default 53)\n"
+                              "-o <ip:port>            Tor proxy IP/Port\n"
+                              "--stats-renew <seconds> ThreadStats loop delay in seconds (default 1)\n"
+                              "--testnet               Use testnet\n"
+                              "--wipeban               Wipe list of banned nodes\n"
+                              "--wipeignore            Wipe list of ignored nodes\n"
+                              "--no-stats              Disable the ThreadStats feature\n"
+                              "-?, --help              Show this text\n"
                               "\n";
     bool showHelp = false;
 
@@ -60,6 +62,7 @@ public:
         {"dnsthreads", required_argument, 0, 'd'},
         {"port", required_argument, 0, 'p'},
         {"onion", required_argument, 0, 'o'},
+        {"stats-renew", required_argument, &nStatsRenew, 1},
         {"testnet", no_argument, &fUseTestNet, 1},
         {"wipeban", no_argument, &fWipeBan, 1},
         {"wipeignore", no_argument, &fWipeBan, 1},
@@ -107,6 +110,14 @@ public:
         case 'o': {
           tor = optarg;
           break;
+        }
+
+        case 0: { // long option
+          if (option_index == 7) { // stats-renew
+            int n = strtol(optarg, NULL, 10);
+            if (n > 0) nStatsRenew = n;
+            break;
+          }
         }
 
         case '?': {
@@ -396,7 +407,8 @@ extern "C" void* ThreadDumper(void*) {
   } while(1);
 }
 
-extern "C" void* ThreadStats(void*) {
+extern "C" void* ThreadStats(void* arg) {
+  int nStatsRenew = *static_cast<int*>(arg);
   bool first = true;
   do {
     char c[256];
@@ -422,7 +434,7 @@ extern "C" void* ThreadStats(void*) {
       queries += dnsThread[i]->dbQueries;
     }
     printf("%s %i/%i available (%i tried in %is, %i new, %i active), %i banned; %llu DNS requests, %llu db queries\n", c, stats.nGood, stats.nAvail, stats.nTracked, stats.nAge, stats.nNew, stats.nAvail - stats.nTracked - stats.nNew, stats.nBanned, (unsigned long long)requests, (unsigned long long)queries);
-    Sleep(1000);
+    Sleep(nStatsRenew * 1000);
   } while(1);
 }
 
@@ -515,7 +527,7 @@ int main(int argc, char **argv) {
   pthread_attr_destroy(&attr_crawler);
   printf("done\n");
   if (!opts.fNoStats)
-    pthread_create(&threadStats, NULL, ThreadStats, NULL);
+    pthread_create(&threadStats, NULL, ThreadStats, &opts.nStatsRenew);
   pthread_create(&threadDump, NULL, ThreadDumper, NULL);
   void* res;
   pthread_join(threadDump, &res);
