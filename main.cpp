@@ -23,12 +23,13 @@ public:
   int fUseTestNet;
   int fWipeBan;
   int fWipeIgnore;
+  int fNoStats;
   const char *mbox;
   const char *ns;
   const char *host;
   const char *tor;
 
-  CDnsSeedOpts() : nThreads(96), nDnsThreads(4), nPort(53), mbox(NULL), ns(NULL), host(NULL), tor(NULL), fUseTestNet(false), fWipeBan(false), fWipeIgnore(false) {}
+  CDnsSeedOpts() : nThreads(96), nDnsThreads(4), nPort(53), mbox(NULL), ns(NULL), host(NULL), tor(NULL), fUseTestNet(false), fWipeBan(false), fWipeIgnore(false), fNoStats(false) {}
 
   void ParseCommandLine(int argc, char **argv) {
     static const char *help = "Twister-seeder\n"
@@ -45,6 +46,7 @@ public:
                               "--testnet       Use testnet\n"
                               "--wipeban       Wipe list of banned nodes\n"
                               "--wipeignore    Wipe list of ignored nodes\n"
+                              "--no-stats      Disable the ThreadStats feature\n"
                               "-?, --help      Show this text\n"
                               "\n";
     bool showHelp = false;
@@ -61,6 +63,7 @@ public:
         {"testnet", no_argument, &fUseTestNet, 1},
         {"wipeban", no_argument, &fWipeBan, 1},
         {"wipeignore", no_argument, &fWipeBan, 1},
+        {"no-stats", no_argument, &fNoStats, 1},
         {"help", no_argument, 0, '?'},
         {0, 0, 0, 0}
       };
@@ -511,7 +514,8 @@ int main(int argc, char **argv) {
   }
   pthread_attr_destroy(&attr_crawler);
   printf("done\n");
-  pthread_create(&threadStats, NULL, ThreadStats, NULL);
+  if (!opts.fNoStats)
+    pthread_create(&threadStats, NULL, ThreadStats, NULL);
   pthread_create(&threadDump, NULL, ThreadDumper, NULL);
   void* res;
   pthread_join(threadDump, &res);
