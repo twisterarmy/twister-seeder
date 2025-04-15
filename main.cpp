@@ -73,6 +73,12 @@ public:
       int option_index = 0;
       int c = getopt_long(argc, argv, "h:n:m:t:d:p:o:?", long_options, &option_index);
       if (c == -1) break;
+      if (c == 0) { // long option
+        if (option_index == 7) { // stats-renew
+          int n = strtol(optarg, NULL, 10);
+          if (n > 0) nStatsRenew = n;
+        }
+      }
       switch (c) {
         case 'h': {
           host = optarg;
@@ -110,14 +116,6 @@ public:
         case 'o': {
           tor = optarg;
           break;
-        }
-
-        case 0: { // long option
-          if (option_index == 7) { // stats-renew
-            int n = strtol(optarg, NULL, 10);
-            if (n > 0) nStatsRenew = n;
-            break;
-          }
         }
 
         case '?': {
